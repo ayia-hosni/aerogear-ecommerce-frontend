@@ -1,0 +1,93 @@
+<header
+  class="sticky top-0 z-50 w-full px-6 py-4 transition-colors duration-500 [view-transition-name:app-header] md:px-10"
+  [class]="overPanel() ? 'bg-transparent' : 'bg-app-bg/90 backdrop-blur-md'"
+>
+  <div class="mx-auto flex max-w-7xl items-center justify-between gap-4">
+    <a routerLink="/" class="flex shrink-0 items-center gap-2" aria-label="AeroGear home">
+      <i class="fa-solid fa-bolt text-[24px]" [class]="logoClass() || 'text-app-primary'"></i>
+      <span class="text-[22px] font-black tracking-tighter" [class]="logoClass() || 'text-app-dark'">AERO<span [class]="logoClass() || 'text-app-primary'">GEAR</span></span>
+    </a>
+
+    <nav class="min-w-0 items-center gap-1 xl:gap-3" [class]="overPanel() ? 'hidden' : 'hidden lg:flex'" aria-label="Primary">
+      <a
+        routerLink="/catalog"
+        routerLinkActive="bg-white text-app-dark shadow-soft"
+        [routerLinkActiveOptions]="{ exact: true }"
+        class="rounded-full px-3 py-2 text-sm font-semibold whitespace-nowrap text-gray-500 transition hover:bg-white hover:text-app-dark xl:px-4 xl:text-[1.05rem]"
+      >
+        New Drops
+      </a>
+      @for (category of navCategories(); track category.id) {
+        <a
+          routerLink="/catalog"
+          [queryParams]="{ category: category.slug }"
+          class="rounded-full px-3 py-2 text-sm font-semibold whitespace-nowrap text-gray-500 transition hover:bg-white hover:text-app-dark xl:px-4 xl:text-[1.05rem]"
+        >
+          {{ category.name }}
+        </a>
+      }
+    </nav>
+
+    <div class="flex shrink-0 items-center gap-3 xl:gap-4">
+      <form
+        class="hidden w-44 items-center rounded-full border border-gray-200 bg-white px-4 py-3 shadow-soft transition focus-within:shadow-md md:flex xl:w-[280px] xl:px-5"
+        role="search"
+        (submit)="$event.preventDefault(); search(searchInput.value)"
+      >
+        <i class="fa-solid fa-magnifying-glass mr-3 text-gray-400"></i>
+        <input
+          #searchInput
+          type="search"
+          name="search"
+          placeholder="Search gear..."
+          aria-label="Search gear"
+          class="w-full border-none bg-transparent font-medium text-gray-700 outline-none placeholder:text-gray-400"
+        />
+      </form>
+
+      <a
+        #cartButton
+        routerLink="/cart"
+        aria-label="Open bag"
+        class="group relative flex h-12 w-12 items-center justify-center rounded-full border shadow-soft transition-all duration-300 hover:scale-105"
+        [class]="impact() ? 'scale-125 border-app-neon bg-app-neon' : 'border-gray-200 bg-white'"
+      >
+        <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="text-gray-800 transition-colors group-hover:text-app-primary" aria-hidden="true">
+          <rect x="4" y="3" width="16" height="10" rx="1" />
+          <rect x="9" y="7" width="6" height="6" />
+          <line x1="4" y1="13" x2="20" y2="13" stroke="#f97316" stroke-width="3" />
+          <path d="M7 13l1.5 9h7l1.5-9" stroke-width="1.5" stroke-dasharray="2 3" opacity="0.8" />
+        </svg>
+        @if (cart.count() > 0) {
+          <span class="absolute -top-1 -right-1 flex h-5 min-w-5 items-center justify-center rounded-full border-2 border-white bg-app-primary px-1 text-[10px] font-bold text-white">
+            {{ cart.count() }}
+          </span>
+        }
+      </a>
+
+      @if (auth.user(); as user) {
+        <div class="relative">
+          <button
+            type="button"
+            class="flex h-12 w-12 items-center justify-center rounded-full border-2 border-white bg-app-dark text-sm font-bold text-white shadow-soft transition-colors hover:border-app-primary"
+            aria-haspopup="menu"
+            [attr.aria-expanded]="menuOpen()"
+            [attr.aria-label]="'Account menu for ' + user.fullName"
+            (click)="menuOpen.set(!menuOpen())"
+          >
+            {{ initials() }}
+          </button>
+          @if (menuOpen()) {
+            <div class="absolute right-0 mt-3 w-56 rounded-2xl border border-gray-200 bg-white p-2 shadow-xl" role="menu">
+              <p class="truncate px-3 py-2 text-sm font-semibold text-gray-500">{{ user.email }}</p>
+              <a routerLink="/orders" role="menuitem" class="block rounded-xl px-3 py-2 font-semibold hover:bg-gray-100" (click)="menuOpen.set(false)">My orders</a>
+              <button type="button" role="menuitem" class="block w-full rounded-xl px-3 py-2 text-left font-semibold text-red-600 hover:bg-red-50" (click)="signOut()">Sign out</button>
+            </div>
+          }
+        </div>
+      } @else {
+        <a routerLink="/login" class="rounded-full bg-app-dark px-5 py-3 text-sm font-bold tracking-wide whitespace-nowrap text-white uppercase transition hover:bg-gray-800 xl:px-6">Sign in</a>
+      }
+    </div>
+  </div>
+</header>

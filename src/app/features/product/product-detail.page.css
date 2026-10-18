@@ -1,0 +1,351 @@
+/*
+ * Full-viewport stage, modelled on the Hinge reference: a coloured panel fills the left 40%, the product spills over
+ * its edge, and the options column staggers in on the right. The morph itself comes from the router's view
+ * transitions (see styles.css); this file only describes the open state.
+ */
+:host {
+  --pad: 6vw;
+  position: fixed;
+  inset: 0;
+  z-index: 40;
+  display: block;
+  overflow: hidden;
+  background: #fff;
+  color: var(--color-app-dark);
+}
+
+.state {
+  display: grid;
+  place-items: center;
+  height: 100%;
+}
+
+/* panel */
+.p-surface {
+  position: absolute;
+  left: 0;
+  top: 0;
+  width: 40vw;
+  height: 100%;
+  overflow: hidden;
+  container-type: inline-size;
+  view-transition-name: product-surface;
+  transition: background-color 0.8s ease;
+}
+
+.p-ghost {
+  position: absolute;
+  top: 6%;
+  left: 50%;
+  translate: -50% 0;
+  font-size: 78cqw;
+  font-weight: 800;
+  line-height: 0.8;
+  color: rgb(255 255 255 / 0.1);
+  user-select: none;
+}
+
+.p-head {
+  position: absolute;
+  z-index: 5;
+  left: var(--pad);
+  top: 14%;
+  width: calc(40vw - 2 * var(--pad));
+  transition: color 0.8s ease;
+}
+
+.p-name {
+  width: fit-content;
+  max-width: 100%;
+  margin: 0;
+  font-size: clamp(30px, 2.6vw, 40px);
+  font-weight: 700;
+  letter-spacing: -0.025em;
+  line-height: 1.1;
+  view-transition-name: product-title;
+}
+
+.p-tabs {
+  display: flex;
+  gap: 24px;
+  margin-top: 22px;
+}
+
+.p-tab {
+  position: relative;
+  padding: 6px 0;
+  border: 0;
+  background: none;
+  font: inherit;
+  font-size: 14px;
+  font-weight: 500;
+  color: inherit;
+  opacity: 0.65;
+  cursor: pointer;
+  transition: opacity 0.2s;
+}
+
+.p-tab:hover,
+.p-tab[aria-selected='true'] {
+  opacity: 1;
+}
+
+.p-tab::after {
+  content: '';
+  position: absolute;
+  inset: auto 0 0;
+  height: 2px;
+  border-radius: 2px;
+  background: currentColor;
+  transform: scaleX(0);
+  transform-origin: left;
+  transition: transform 0.35s cubic-bezier(0.2, 0.8, 0.2, 1);
+}
+
+.p-tab[aria-selected='true']::after {
+  transform: none;
+}
+
+.p-desc {
+  margin-top: 14px;
+  max-width: 32ch;
+  font-size: 15px;
+  line-height: 1.55;
+  opacity: 0.8;
+}
+
+.p-desc p {
+  margin: 0;
+}
+
+.p-specs {
+  display: grid;
+  grid-template-columns: auto 1fr;
+  gap: 6px 20px;
+  margin: 0;
+}
+
+.p-specs dd {
+  margin: 0;
+  font-weight: 600;
+}
+
+.p-foot {
+  position: absolute;
+  z-index: 5;
+  left: var(--pad);
+  bottom: 9%;
+  display: flex;
+  align-items: flex-end;
+  gap: 20px;
+  transition: color 0.8s ease;
+}
+
+.p-price {
+  margin: 0;
+  font-weight: 600;
+  line-height: 1;
+}
+
+.p-price small {
+  display: block;
+  margin-bottom: 6px;
+  font-size: 12px;
+  font-weight: 500;
+  opacity: 0.7;
+}
+
+.p-price-value {
+  display: block;
+  width: fit-content;
+  font-size: 32px;
+  letter-spacing: -0.02em;
+  font-variant-numeric: tabular-nums;
+  view-transition-name: product-price;
+}
+
+.p-add {
+  position: relative;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+  width: 190px;
+  height: 56px;
+  border: 0;
+  background: none;
+  border-radius: 14px;
+  font: inherit;
+  font-size: 15px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: translate 0.2s;
+}
+
+.p-add:hover:not(:disabled) {
+  translate: 0 -2px;
+}
+
+.p-add:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.p-add-bg {
+  position: absolute;
+  inset: 0;
+  border-radius: 14px;
+  box-shadow: 0 14px 26px -12px rgb(0 0 0 / 0.5);
+  transition: background-color 0.8s ease;
+  view-transition-name: product-add;
+}
+
+.p-add > i,
+.p-add-label {
+  animation: late-in 0.4s 0.4s both;
+}
+
+.p-add-label {
+  display: block;
+  position: relative;
+}
+
+/* product */
+.p-hero {
+  position: absolute;
+  z-index: 6;
+  left: 38vw;
+  top: 54%;
+  width: min(54vw, 62vh);
+  aspect-ratio: 1;
+  translate: -50% -50%;
+  pointer-events: none;
+}
+
+.frame {
+  position: absolute;
+  inset: 0;
+}
+
+.p-hero.zoom .frame {
+  overflow: hidden;
+  mask-image: radial-gradient(ellipse 62% 64% at 50% 50%, #000 62%, transparent 100%);
+}
+
+.shoe {
+  position: absolute;
+  inset: 0;
+  will-change: transform, opacity;
+}
+
+.v {
+  position: absolute;
+  inset: 0;
+  transition: transform 0.6s cubic-bezier(0.2, 0.8, 0.2, 1);
+}
+
+.v img {
+  display: block;
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+  filter: drop-shadow(0 40px 30px rgb(0 0 0 / 0.35));
+}
+
+/* options column: centred when it fits, scrolls (below the header) when it doesn't */
+.cfg {
+  position: absolute;
+  z-index: 4;
+  /* never closer than the product's right edge, so narrow windows don't let the shoe cover the labels */
+  left: max(63vw, calc(38vw + min(54vw, 62vh) / 2 + 16px));
+  right: var(--pad);
+  top: 0;
+  bottom: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 22px;
+  padding: 100px 0 36px;
+  overflow: hidden auto;
+  scrollbar-width: thin;
+}
+
+.cfg > :first-child {
+  margin-top: auto;
+}
+
+.cfg > :last-child {
+  margin-bottom: auto;
+}
+
+.cfg > * {
+  flex: none;
+  animation: cfg-in 0.75s calc(380ms + var(--i, 0) * 70ms) cubic-bezier(0.2, 0.8, 0.2, 1) both;
+}
+
+@keyframes cfg-in {
+  from {
+    opacity: 0;
+    transform: translateX(30px);
+  }
+}
+
+.late {
+  animation: late-in 0.5s 0.45s both;
+}
+
+@keyframes late-in {
+  from {
+    opacity: 0;
+  }
+}
+
+/* phones: panel on top, options below */
+@media (max-width: 760px) {
+  :host {
+    --pad: 22px;
+  }
+
+  .p-surface {
+    width: 100%;
+    height: 56%;
+  }
+
+  .p-head {
+    top: 78px;
+    width: calc(100% - 2 * var(--pad));
+  }
+
+  .p-name {
+    font-size: 30px;
+  }
+
+  .p-tabs,
+  .p-desc {
+    display: none;
+  }
+
+  .p-foot {
+    bottom: calc(44% + 20px);
+  }
+
+  .p-add {
+    width: 140px;
+  }
+
+  .p-hero {
+    left: 50%;
+    top: 31%;
+    width: min(70vw, 30vh);
+  }
+
+  .cfg {
+    left: 20px;
+    right: 20px;
+    top: 58%;
+    padding: 18px 0 28px;
+  }
+
+  .cfg-eyebrow {
+    font-size: 24px;
+  }
+}

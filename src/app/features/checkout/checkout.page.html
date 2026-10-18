@@ -1,0 +1,67 @@
+<h1 class="mb-8 px-2 text-[32px] leading-none font-black tracking-tight">Checkout</h1>
+
+<div class="grid gap-8 lg:grid-cols-[1fr_380px]">
+  <form [formGroup]="form" (ngSubmit)="submit()" class="space-y-5 rounded-3xl border border-gray-200 bg-white p-6 shadow-soft md:p-8" novalidate>
+    <h2 class="text-xl font-black">Shipping address</h2>
+
+    <label class="block">
+      <span class="mb-1.5 block text-sm font-bold">Full name</span>
+      <input type="text" formControlName="fullName" autocomplete="name" class="w-full rounded-2xl border border-gray-300 px-4 py-3 outline-none focus:border-app-primary" />
+      @if (invalid('fullName')) { <span class="mt-1 block text-sm text-red-600">Full name is required.</span> }
+    </label>
+    <label class="block">
+      <span class="mb-1.5 block text-sm font-bold">Address</span>
+      <input type="text" formControlName="line1" autocomplete="address-line1" class="w-full rounded-2xl border border-gray-300 px-4 py-3 outline-none focus:border-app-primary" />
+      @if (invalid('line1')) { <span class="mt-1 block text-sm text-red-600">Address is required.</span> }
+    </label>
+    <label class="block">
+      <span class="mb-1.5 block text-sm font-bold">Apartment, suite, etc. (optional)</span>
+      <input type="text" formControlName="line2" autocomplete="address-line2" class="w-full rounded-2xl border border-gray-300 px-4 py-3 outline-none focus:border-app-primary" />
+    </label>
+    <div class="grid gap-5 md:grid-cols-2">
+      <label class="block">
+        <span class="mb-1.5 block text-sm font-bold">City</span>
+        <input type="text" formControlName="city" autocomplete="address-level2" class="w-full rounded-2xl border border-gray-300 px-4 py-3 outline-none focus:border-app-primary" />
+        @if (invalid('city')) { <span class="mt-1 block text-sm text-red-600">City is required.</span> }
+      </label>
+      <label class="block">
+        <span class="mb-1.5 block text-sm font-bold">Postal code</span>
+        <input type="text" formControlName="postalCode" autocomplete="postal-code" class="w-full rounded-2xl border border-gray-300 px-4 py-3 outline-none focus:border-app-primary" />
+        @if (invalid('postalCode')) { <span class="mt-1 block text-sm text-red-600">Postal code is required.</span> }
+      </label>
+    </div>
+    <label class="block">
+      <span class="mb-1.5 block text-sm font-bold">Country</span>
+      <input type="text" formControlName="country" autocomplete="country-name" class="w-full rounded-2xl border border-gray-300 px-4 py-3 outline-none focus:border-app-primary" />
+      @if (invalid('country')) { <span class="mt-1 block text-sm text-red-600">Country is required.</span> }
+    </label>
+
+    @if (error(); as message) {
+      <p class="rounded-2xl bg-red-50 px-4 py-3 text-sm font-semibold text-red-700" role="alert">{{ message }}</p>
+    }
+
+    <button type="submit" [disabled]="submitting()" class="w-full rounded-2xl bg-app-primary py-4 font-black tracking-widest text-white uppercase transition hover:bg-app-primary-hover disabled:opacity-60">
+      {{ submitting() ? 'Placing order…' : 'Place order' }}
+    </button>
+  </form>
+
+  <aside class="h-fit rounded-3xl border border-gray-200 bg-white p-6 shadow-soft">
+    <h2 class="mb-5 text-xl font-black">Your items</h2>
+    <ul class="mb-5 space-y-3">
+      @for (item of cart.items(); track item.productId) {
+        <li class="flex items-center gap-3">
+          <img [src]="item.imageUrl" [alt]="item.name" class="h-14 w-14 rounded-xl bg-app-bg object-contain p-1" />
+          <div class="min-w-0 flex-1">
+            <p class="truncate font-bold">{{ item.name }}</p>
+            <p class="text-sm font-semibold text-gray-500">Qty {{ item.quantity }}</p>
+          </div>
+          <span class="font-bold">{{ item.unitPrice * item.quantity | currency }}</span>
+        </li>
+      }
+    </ul>
+    <div class="flex justify-between border-t border-gray-200 pt-4 text-xl font-black">
+      <span>Total</span><span>{{ cart.subtotal() | currency }}</span>
+    </div>
+    <a routerLink="/cart" class="mt-4 block text-center text-sm font-semibold text-gray-500 hover:text-app-dark">Edit bag</a>
+  </aside>
+</div>

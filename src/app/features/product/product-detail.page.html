@@ -1,0 +1,220 @@
+@let current = pageState();
+@if (current.status === 'ready') {
+  @let product = current.data;
+  @let panelTint = panel()!;
+
+  <!-- Left panel: the list card's colour grows into this, and it follows the colour you pick. -->
+  <div class="p-surface" [style.background-color]="panelTint.background" aria-hidden="true">
+    <span class="p-ghost">{{ product.name[0] }}</span>
+  </div>
+
+  <div class="p-head" [style.color]="panelTint.ink">
+    <div class="wipe-box">
+      <h1 class="p-name">{{ product.name }}</h1>
+      <span class="wipe" #titleWipe aria-hidden="true"></span>
+    </div>
+    <div class="p-tabs late" role="tablist" aria-label="Product details">
+      <button type="button" role="tab" class="p-tab" [attr.aria-selected]="tab() === 'overview'" (click)="tab.set('overview')">Overview</button>
+      <button type="button" role="tab" class="p-tab" [attr.aria-selected]="tab() === 'details'" (click)="tab.set('details')">Details</button>
+    </div>
+    <div class="p-desc late">
+      @if (tab() === 'overview') {
+        <p>{{ product.summary }}</p>
+      } @else {
+        <dl class="p-specs">
+          @if (product.series) {
+            <dt>Series</dt>
+            <dd>{{ product.series }}</dd>
+          }
+          <dt>Category</dt>
+          <dd>{{ product.categoryName }}</dd>
+          <dt>Rating</dt>
+          <dd>{{ product.rating.toFixed(1) }} ({{ product.reviewCount }})</dd>
+          <dt>Stock</dt>
+          <dd>{{ product.stock > 0 ? product.stock + ' available' : 'Out of stock' }}</dd>
+        </dl>
+      }
+    </div>
+  </div>
+
+  <div class="p-foot" [style.color]="panelTint.ink">
+    <p class="p-price">
+      <small class="late">Price</small>
+      <span class="wipe-box">
+        <span class="p-price-value">{{ product.price | currency }}</span>
+        <span class="wipe" #priceWipe aria-hidden="true"></span>
+      </span>
+    </p>
+    <button
+      type="button"
+      [appAddToCart]="product"
+      [appAddToCartQuantity]="quantity()"
+      [appAddToCartOptions]="{ size: size(), color: color()?.name }"
+      class="p-add"
+      [style.color]="panelTint.accentInk"
+      (click)="flashAdded()"
+    >
+      <span class="p-add-bg" [style.background-color]="panelTint.accent" aria-hidden="true"></span>
+      <i class="fa-solid fa-bolt relative"></i>
+      <span class="wipe-box p-add-label">
+        <span>{{ added() ? 'Added' : 'Add to bag' }}</span>
+        <span class="wipe" #addWipe aria-hidden="true"></span>
+      </span>
+    </button>
+  </div>
+
+  <!-- The product: its own layer, larger than the panel so it spills onto the white side. -->
+  <div class="p-hero" [class.zoom]="view() >= 2">
+    <div class="frame">
+      @for (src of layerSrc(); track $index; let i = $index) {
+        <div
+          #layer
+          class="shoe"
+          [style.opacity]="front() === i ? null : 0"
+          [style.z-index]="front() === i ? 2 : 1"
+          [style.view-transition-name]="front() === i ? 'product-image' : null"
+        >
+          <div class="v" [style.transform]="viewTransform()">
+            <img
+              [src]="src"
+              [alt]="front() === i ? product.name + ', ' + views[view()].label.toLowerCase() + ' view' : ''"
+              [attr.aria-hidden]="front() === i ? null : 'true'"
+              [style.filter]="layerFilter()[i]"
+            />
+          </div>
+        </div>
+      }
+    </div>
+  </div>
+
+  <section class="cfg" aria-label="Product options">
+    <button type="button" class="cfg-back" style="--i: 0" (click)="back()">
+      <i class="fa-solid fa-arrow-left"></i> Back
+    </button>
+
+    <div class="wipe-box" style="--i: 1">
+      <p class="cfg-eyebrow">
+        {{ product.series ?? product.categoryName }}@if (colorLabel()) { — {{ colorLabel() }}}
+      </p>
+      <span class="wipe" #eyebrowWipe aria-hidden="true"></span>
+    </div>
+
+    <div class="cfg-meta" style="--i: 2">
+      <span class="flex items-center gap-1 text-yellow-500" role="img" [attr.aria-label]="'Rated ' + product.rating.toFixed(1) + ' out of 5'">
+        @for (filled of stars(); track $index) {
+          <i class="fa-star text-xs" [class]="filled ? 'fa-solid' : 'fa-regular'"></i>
+        }
+      </span>
+      <span class="font-bold text-app-dark">{{ product.rating.toFixed(1) }}</span>
+      <span>({{ product.reviewCount }} reviews)</span>
+      <a [routerLink]="['/catalog']" [queryParams]="{ category: product.categorySlug }" class="font-semibold text-app-primary">{{ product.categoryName }}</a>
+    </div>
+
+    @if (product.colors.length) {
+      <div style="--i: 3">
+        <p class="cfg-label" id="colour-label">Colour</p>
+        <div class="swatches" role="group" aria-labelledby="colour-label">
+          @for (option of product.colors; track option.name; let i = $index) {
+            <button type="button" class="sw" [attr.aria-label]="option.name" [attr.aria-pressed]="i === colorIndex()" [disabled]="busy()" (click)="pickColor(i)">
+              <i [style.background-color]="option.hex"></i>
+            </button>
+          }
+        </div>
+      </div>
+    }
+
+    @if (product.sizes.length) {
+      <div style="--i: 4">
+        <p class="cfg-label" id="size-label">{{ sizeLabel() }}</p>
+        <div class="sizes" role="group" aria-labelledby="size-label">
+          @for (option of product.sizes; track option) {
+            @let soldOut = product.soldOutSizes.includes(option);
+            <button
+              type="button"
+              class="size"
+              [disabled]="soldOut"
+              [attr.aria-pressed]="option === size()"
+              [attr.aria-label]="soldOut ? option + ', sold out' : option"
+              (click)="selectSize(option)"
+            >
+              {{ option }}
+            </button>
+          }
+        </div>
+      </div>
+    }
+
+    <div style="--i: 5">
+      <p class="cfg-label">View</p>
+      <div class="thumbs" role="group" aria-label="Views">
+        @for (item of visibleViews(); track item.label; let i = $index) {
+          <button type="button" class="thumb" [attr.aria-pressed]="i === view()" [attr.aria-label]="item.label + ' view'" (click)="setView(i)">
+            <div class="tv" [style.transform]="item.transform">
+              <img [src]="frontSrc()" alt="" [style.filter]="frontFilter()" />
+            </div>
+          </button>
+        }
+        @if (!moreViews()) {
+          <button type="button" class="more" aria-label="Show 2 more views" (click)="moreViews.set(true)">+2</button>
+        }
+      </div>
+    </div>
+
+    @if (product.stock > 0) {
+      <div class="cfg-qty" style="--i: 6">
+        <div class="qty">
+          <button type="button" aria-label="Decrease quantity" (click)="changeQuantity(-1, product.stock)">−</button>
+          <span aria-live="polite">{{ quantity() }}</span>
+          <button type="button" aria-label="Increase quantity" (click)="changeQuantity(1, product.stock)">+</button>
+        </div>
+        <p class="stock" [class.low]="product.stock <= 5">{{ product.stock <= 5 ? 'Only ' + product.stock + ' left' : 'In stock' }}</p>
+        <button
+          type="button"
+          class="heart"
+          [attr.aria-pressed]="wishlist.has(product.slug)"
+          aria-label="Save to wishlist"
+          (click)="toggleWishlist(product.slug)"
+        >
+          <i class="fa-heart" [class]="wishlist.has(product.slug) ? 'fa-solid' : 'fa-regular'"></i>
+        </button>
+      </div>
+    } @else {
+      <p class="stock low" style="--i: 6">Out of stock</p>
+    }
+
+    <div class="cfg-nav" style="--i: 7">
+      <button type="button" class="play" [attr.aria-pressed]="playing()" (click)="toggleShowcase()">
+        <span class="dot" aria-hidden="true"><i class="fa-solid" [class]="playing() ? 'fa-pause' : 'fa-play'"></i></span>
+        {{ playing() ? 'Pause showcase' : 'Play showcase' }}
+      </button>
+      @if (dashes().length > 1) {
+        <div class="arrows">
+          <button type="button" class="arrow" style="--nudge: -3px" aria-label="Previous product" [disabled]="busy()" (click)="go(-1)">
+            <i class="fa-solid fa-arrow-left"></i>
+          </button>
+          <button type="button" class="arrow" style="--nudge: 3px" aria-label="Next product" [disabled]="busy()" (click)="go(1)">
+            <i class="fa-solid fa-arrow-right"></i>
+          </button>
+        </div>
+        <div class="progress" aria-hidden="true">
+          <span>{{ position() + 1 < 10 ? '0' : '' }}{{ position() + 1 }}</span>
+          <span class="track">
+            @for (dash of dashes(); track dash) {
+              <span [class.on]="dash === position()"></span>
+            }
+          </span>
+          <span>{{ dashes().length < 10 ? '0' : '' }}{{ dashes().length }}</span>
+        </div>
+      }
+    </div>
+  </section>
+} @else {
+  <div class="state">
+    <app-async-state
+      [status]="current.status"
+      [message]="current.status === 'error' ? current.message : ''"
+      loadingLabel="Loading product…"
+      (retry)="retry()"
+    />
+  </div>
+}

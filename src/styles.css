@@ -1,0 +1,181 @@
+@import "tailwindcss";
+
+@theme {
+  --font-sans: "Plus Jakarta Sans", ui-sans-serif, system-ui, sans-serif;
+  --color-app-bg: #f4f5f7;
+  --color-app-primary: #2563eb;
+  --color-app-primary-hover: #1d4ed8;
+  --color-app-dark: #0f172a;
+  --color-app-neon: #10b981;
+  --shadow-soft: 0 10px 40px -10px rgba(0, 0, 0, 0.08);
+}
+
+@utility no-scrollbar {
+  scrollbar-width: none;
+  -ms-overflow-style: none;
+
+  &::-webkit-scrollbar {
+    display: none;
+  }
+}
+
+@layer base {
+  body {
+    @apply bg-app-bg font-sans text-app-dark antialiased;
+    min-height: 100vh;
+  }
+
+  button:not(:disabled),
+  [role="button"] {
+    cursor: pointer;
+  }
+}
+
+@keyframes spin-ball {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    transition-duration: 0.01ms !important;
+  }
+}
+
+/*
+ * Product card ⇄ detail morph, timed like the Hinge reference: 760ms on a strong ease-in-out (no overshoot).
+ * The colour, product, title, price and button are separate layers (names are only set on the clicked product).
+ */
+::view-transition-group(product-surface),
+::view-transition-group(product-image),
+::view-transition-group(product-title),
+::view-transition-group(product-price),
+::view-transition-group(product-add) {
+  animation-duration: 760ms;
+  animation-timing-function: cubic-bezier(0.76, 0, 0.24, 1);
+}
+
+/* Plain colour layers: stretch to the box and cross-fade the colours without brightening. */
+::view-transition-old(product-surface),
+::view-transition-new(product-surface),
+::view-transition-old(product-add),
+::view-transition-new(product-add) {
+  height: 100%;
+  mix-blend-mode: normal;
+}
+
+/* Everything that isn't morphing (other cards, headings) steps away quickly, like the reference's fading slots. */
+::view-transition-old(root) {
+  animation: 0.45s ease both vt-fade-out;
+}
+
+::view-transition-new(root) {
+  animation: none;
+}
+
+@keyframes vt-fade-out {
+  to {
+    opacity: 0;
+  }
+}
+
+/* Card details that aren't part of a morph layer wait until the panel has landed on the card. */
+.vt-late {
+  animation: vt-late-in 0.4s 0.6s both;
+}
+
+@keyframes vt-late-in {
+  from {
+    opacity: 0;
+  }
+}
+
+@keyframes reveal-up {
+  from {
+    opacity: 0;
+    transform: translateY(16px);
+  }
+}
+
+.reveal {
+  animation: reveal-up 0.5s var(--delay, 0s) cubic-bezier(0.22, 1, 0.36, 1) both;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  ::view-transition-group(*),
+  ::view-transition-old(*),
+  ::view-transition-new(*) {
+    animation-duration: 0.01ms !important;
+  }
+}
+
+/* text wipe (button transitions): a block filled with the text colour sweeps over the text while it changes */
+.wipe-box {
+  position: relative;
+  display: block;
+  width: fit-content;
+  max-width: 100%;
+}
+
+.wipe {
+  position: absolute;
+  inset: -2px -5px;
+  background: currentColor;
+  transform: scaleX(0);
+  pointer-events: none;
+}
+
+/* Filter chip and round arrow used by the trending carousel. */
+.carousel-chip {
+  border: 1px solid var(--color-gray-300);
+  border-radius: 999px;
+  padding: 0.5rem 1rem;
+  font-size: 0.8rem;
+  font-weight: 700;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  color: var(--color-gray-600);
+  transition:
+    background-color 0.2s,
+    color 0.2s,
+    border-color 0.2s;
+}
+
+.carousel-chip:hover {
+  background: var(--color-gray-100);
+}
+
+.carousel-chip.on {
+  border-color: var(--color-app-dark);
+  background: var(--color-app-dark);
+  color: #fff;
+}
+
+.carousel-arrow {
+  display: grid;
+  place-items: center;
+  width: 3rem;
+  height: 3rem;
+  border: 1px solid var(--color-gray-200);
+  border-radius: 999px;
+  background: #fff;
+  box-shadow: var(--shadow-soft);
+  transition:
+    transform 0.2s,
+    background-color 0.2s,
+    opacity 0.2s;
+}
+
+.carousel-arrow:hover:not(:disabled) {
+  background: var(--color-app-dark);
+  color: #fff;
+}
+
+.carousel-arrow:disabled {
+  opacity: 0.35;
+  cursor: default;
+}

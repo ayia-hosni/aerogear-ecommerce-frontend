@@ -1,0 +1,81 @@
+<header class="mb-8 flex flex-col gap-6 px-2 md:flex-row md:items-end md:justify-between">
+  <div>
+    <h1 class="mb-2 text-[32px] leading-none font-black tracking-tight">{{ heading() }}</h1>
+    @if (totalCount() !== null) {
+      <p class="font-medium text-gray-500">{{ totalCount() }} {{ totalCount() === 1 ? 'product' : 'products' }}</p>
+    }
+  </div>
+
+  <label class="flex items-center gap-3 text-sm font-semibold text-gray-600">
+    Sort by
+    <select
+      class="rounded-full border border-gray-300 bg-white px-4 py-2.5 font-semibold text-app-dark"
+      [value]="filters().sort"
+      (change)="onSortChange($event)"
+    >
+      @for (option of sortOptions; track option.value) {
+        <option [value]="option.value">{{ option.label }}</option>
+      }
+    </select>
+  </label>
+</header>
+
+<nav class="no-scrollbar mb-10 flex items-center gap-3 overflow-x-auto pb-2" aria-label="Categories">
+  <button
+    type="button"
+    class="rounded-full border px-7 py-3 text-[14px] font-bold tracking-wide whitespace-nowrap uppercase transition-colors"
+    [class]="!filters().category ? 'border-app-dark bg-app-dark text-white' : 'border-gray-300 text-gray-600 hover:bg-gray-100'"
+    (click)="update({ category: null })"
+  >
+    All
+  </button>
+  @for (category of categories(); track category.id) {
+    <button
+      type="button"
+      class="rounded-full border px-7 py-3 text-[14px] font-bold tracking-wide whitespace-nowrap uppercase transition-colors"
+      [class]="filters().category === category.slug ? 'border-app-dark bg-app-dark text-white' : 'border-gray-300 text-gray-600 hover:bg-gray-100'"
+      (click)="update({ category: category.slug })"
+    >
+      {{ category.name }}
+    </button>
+  }
+</nav>
+
+@let state = result();
+@if (state.status === 'ready') {
+  @if (state.data.items.length) {
+    <div class="grid grid-cols-1 gap-x-8 gap-y-24 pt-16 pb-16 md:grid-cols-2 lg:grid-cols-3">
+      @for (product of state.data.items; track product.id) {
+        <app-product-card [product]="product" />
+      }
+    </div>
+
+    @if (state.data.totalPages > 1) {
+      <nav class="flex justify-center gap-2 pb-8" aria-label="Pagination">
+        @for (page of pages(state.data.totalPages); track page) {
+          <button
+            type="button"
+            class="h-11 w-11 rounded-full font-bold transition-colors"
+            [class]="page === state.data.page ? 'bg-app-dark text-white' : 'bg-white text-gray-600 hover:bg-gray-100'"
+            [attr.aria-current]="page === state.data.page ? 'page' : null"
+            (click)="update({ page })"
+          >
+            {{ page }}
+          </button>
+        }
+      </nav>
+    }
+  } @else {
+    <div class="py-24 text-center">
+      <i class="fa-solid fa-magnifying-glass mb-4 text-3xl text-gray-300"></i>
+      <p class="mb-5 font-semibold text-gray-600">No products match your filters.</p>
+      <a routerLink="/catalog" class="font-bold text-app-primary uppercase">Clear filters</a>
+    </div>
+  }
+} @else {
+  <app-async-state
+    [status]="state.status"
+    [message]="state.status === 'error' ? state.message : ''"
+    (retry)="retry()"
+  />
+}
